@@ -152,7 +152,7 @@ export default {
      * @param {*} year - Year (YYYY)
      * @param {number} page - Page (50 per page)
      * @param {"HighSchool"|"JuniorCollege"|"PrepSchool"} group - Institution Type
-     * @param {"Composite"|"247"} rankingsType - Ranking Type
+     * @param {"Composite"|"247"|"Rivals"} rankingsType - Ranking Type
      * @param {string} state - State of recruit
      * @returns json
      * @example
@@ -178,6 +178,8 @@ export default {
             baseUrl = `http://247sports.com/Season/${year}-Football/CompositeRecruitRankings`;
         } else if (rankingsType === '247') {
             baseUrl = `http://247sports.com/Season/${year}-Football/recruitrankings`;
+        }  else if (rankingsType === 'Rivals') {
+            baseUrl = `https://n.rivals.com/prospect_rankings/rivals250/${year}`
         } else {
             throw new Error("Invalid rankings type");
         }
@@ -194,29 +196,47 @@ export default {
 
         let players = [];
 
-        // Couldn't grab the rank correctly with JQuery so it's manually calculated
-        let rank = 1 + 50 * (page - 1);
+        if (recruitingType === '247' || recruitingType === 'Composite') {
+            // Couldn't grab the rank correctly with JQuery so it's manually calculated
+            let rank = 1 + 50 * (page - 1);
 
-        $('ul.rankings-page__list > li.rankings-page__list-item:not(.rankings-page__list-item--header)').each(function (index) {
+            $('ul.rankings-page__list > li.rankings-page__list-item:not(.rankings-page__list-item--header)').each(function (index) {
             let html = $(this);
 
             let metrics = html.find('.metrics').text().split('/');
+                let player = {
+                    ranking: rank,
+                    name: html.find('.rankings-page__name-link').text().trim(),
+                    highSchool: html.find('span.meta').text().trim(),
+                    position: html.find('.position').text().trim(),
+                    height: metrics[0],
+                    weight: metrics[1],
+                    stars: html.find('.rankings-page__star-and-score > .yellow').length,
+                    rating: html.find('.score').text().trim().trim(),
+                    college: html.find('.img-link > img').attr('title') || 'uncommitted'
+                };
 
-            let player = {
-                ranking: rank,
-                name: html.find('.rankings-page__name-link').text().trim(),
-                highSchool: html.find('span.meta').text().trim(),
-                position: html.find('.position').text().trim(),
-                height: metrics[0],
-                weight: metrics[1],
-                stars: html.find('.rankings-page__star-and-score > .yellow').length,
-                rating: html.find('.score').text().trim().trim(),
-                college: html.find('.img-link > img').attr('title') || 'uncommitted'
-            };
+                players.push(player);
+                rank++;
+            });
+            } else if (recruitingType === 'Rivals') {
+                $('table.sortable-table rankings list gradient-long > tr.prospect-table-row ng-scope').each(function (index){
 
-            players.push(player);
-            rank++;
-        });
+                    let player = {
+                        ranking: html.find('span.ordinality ng-binding ng-scope').text().trim(),
+                        name: html.find('div.first-name ng-binding').text().trim() + ' ' + html.find('div.last-name ng-binding').text().trim() ,
+                        highSchool: html.find('span.break-text ng-binding ng-scope').text().trim(),
+                        position: html.find('span.pos ng-binding ng-scope').text().trim(),
+                        height: html.find('span.height ng-binding ng-scope').text(),
+                        weight: html.find('span.pos ng-binding ng-scope'),
+                        stars: html.find('.rv-stars i.star-on').length,
+                        rating: html.find('.score').text().trim().trim(),
+                        college: html.find('div.school-name ng-scope').text()
+                    }; 
+
+                    players.push(player);
+                });
+            }
 
         return players;
     },
