@@ -150,7 +150,7 @@ export default {
      * @async
      * @function
      * @param {*} year - Year (YYYY)
-     * @param {number} page - Page (50 per page)
+     * @param {number} page - Page (50 per page) with 247, not used with rivals
      * @param {"HighSchool"|"JuniorCollege"|"PrepSchool"} group - Institution Type
      * @param {"Composite"|"247"|"Rivals"} rankingsType - Ranking Type
      * @param {string} state - State of recruit
@@ -176,10 +176,26 @@ export default {
         let baseUrl;
         if (rankingsType === 'Composite') {
             baseUrl = `http://247sports.com/Season/${year}-Football/CompositeRecruitRankings`;
+            const params = {
+                InstitutionGroup: group,
+                Page: page,
+                Position: position,
+                State: state
+            };
         } else if (rankingsType === '247') {
             baseUrl = `http://247sports.com/Season/${year}-Football/recruitrankings`;
+            const params = {
+                InstitutionGroup: group,
+                Page: page,
+                Position: position,
+                State: state
+            };
         }  else if (rankingsType === 'Rivals') {
-            baseUrl = `https://n.rivals.com/prospect_rankings/rivals250/${year}`
+            baseUrl = `https://n.rivals.com/prospect_rankings/rivals250/${year}`;
+            const params = {
+                Position: position,
+                State: state
+            };
         } else {
             throw new Error("Invalid rankings type");
         }
