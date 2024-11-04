@@ -166,7 +166,6 @@ export default {
         state = null,
         rankingsType = "247Composite"
     }) {
-   
         let params;
         let baseUrl;
         const axiosConfig = {
@@ -214,10 +213,7 @@ export default {
     
         const res = await axios.get(baseUrl, axiosConfig);
     
-        //console.log(res.data);
         let $ = cheerio.load(res.data);
-        //console.log('this is cheer ', $);
-        //console.log('this is cheer.html ', $.html())
         let players = [];
     
         if (rankingsType === '247' || rankingsType === '247Composite') {
@@ -311,7 +307,6 @@ export default {
                 $(this).find('td').each(function (tdIndex) {
                     let html = $(this);
     
-                    //console.log(html.html());
                     switch (tdIndex) {
                         case 0:
                             rank = html.text().trim();
