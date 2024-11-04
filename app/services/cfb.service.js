@@ -150,10 +150,10 @@ export default {
      * @async
      * @function
      * @param {*} year - Year (YYYY)
-     * @param {number} page - Page (50 per page) with 247, not used with rivals
-     * @param {"HighSchool"|"JuniorCollege"|"PrepSchool"} group - Institution Type
-     * @param {"Composite"|"247"|"Rivals"} rankingsType - Ranking Type
-     * @param {string} state - State of recruit
+     * @param {number} page - Page (50 per page) used with 247 only
+     * @param {"HighSchool"|"JuniorCollege"|"PrepSchool"} group - Institution Type, 247 only
+     * @param {"247Composite"|"247"|"Rivals"|"ESPN"|"On3"|"On3Composite"} rankingsType - Ranking Service Type
+     * @param {string} state - State of recruit only used with 247
      * @returns json
      * @example
      * const result = await sdv.cfb.getPlayerRankings({year: 2016});
@@ -164,19 +164,25 @@ export default {
         group = "HighSchool",
         position = null,
         state = null,
-        rankingsType = "Composite"
+        rankingsType = "247Composite"
     }) {
-       const params = {
-            InstitutionGroup: group,
-            Page: page,
-            Position: position,
-            State: state
-        };
-
+   
+        let params;
         let baseUrl;
-        if (rankingsType === 'Composite') {
+        const axiosConfig = {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
+            }
+        };
+        
+        // Add params if it's not empty
+        if (params && Object.keys(params).length > 0) {
+            axiosConfig.params = params;
+        }
+    
+        if (rankingsType === '247Composite') {
             baseUrl = `http://247sports.com/Season/${year}-Football/CompositeRecruitRankings`;
-            const params = {
+            params = {
                 InstitutionGroup: group,
                 Page: page,
                 Position: position,
@@ -184,42 +190,44 @@ export default {
             };
         } else if (rankingsType === '247') {
             baseUrl = `http://247sports.com/Season/${year}-Football/recruitrankings`;
-            const params = {
+            params = {
                 InstitutionGroup: group,
                 Page: page,
                 Position: position,
                 State: state
             };
         }  else if (rankingsType === 'Rivals') {
-            baseUrl = `https://n.rivals.com/prospect_rankings/rivals250/${year}`;
-            const params = {
-                Position: position,
-                State: state
-            };
+            baseUrl = `https://n.rivals.com/prospect_rankings/rivals250/${year}?position=ALL%20POSITIONS`;
+        } else if (rankingsType === 'On3') {
+            baseUrl = `https://www.on3.com/db/rankings/player/football/${year}/`;
+        } else if ( rankingsType == 'On3Composite') {
+            baseUrl = `https://www.on3.com/db/rankings/industry-player/football/${year}/`
+        } else if (rankingsType === 'ESPN') {
+            baseUrl = `https://www.espn.com/college-sports/football/recruiting/playerrankings/_/class/${year}/order/true`
         } else {
             throw new Error("Invalid rankings type");
         }
         
-        const res = await axios.get(baseUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
-            },
-            params
-        });
-
-        
+        if (params && Object.keys(params).length > 0) {
+            axiosConfig.params = params;
+        }
+    
+        const res = await axios.get(baseUrl, axiosConfig);
+    
+        //console.log(res.data);
         let $ = cheerio.load(res.data);
-
+        //console.log('this is cheer ', $);
+        //console.log('this is cheer.html ', $.html())
         let players = [];
-
-        if (recruitingType === '247' || recruitingType === 'Composite') {
+    
+        if (rankingsType === '247' || rankingsType === '247Composite') {
             // Couldn't grab the rank correctly with JQuery so it's manually calculated
             let rank = 1 + 50 * (page - 1);
-
+    
             $('ul.rankings-page__list > li.rankings-page__list-item:not(.rankings-page__list-item--header)').each(function (index) {
-            let html = $(this);
-
-            let metrics = html.find('.metrics').text().split('/');
+                let html = $(this);
+    
+                let metrics = html.find('.metrics').text().split('/');
                 let player = {
                     ranking: rank,
                     name: html.find('.rankings-page__name-link').text().trim(),
@@ -231,29 +239,142 @@ export default {
                     rating: html.find('.score').text().trim().trim(),
                     college: html.find('.img-link > img').attr('title') || 'uncommitted'
                 };
-
+    
                 players.push(player);
                 rank++;
             });
-            } else if (recruitingType === 'Rivals') {
-                $('table.sortable-table rankings list gradient-long > tr.prospect-table-row ng-scope').each(function (index){
-
-                    let player = {
-                        ranking: html.find('span.ordinality ng-binding ng-scope').text().trim(),
-                        name: html.find('div.first-name ng-binding').text().trim() + ' ' + html.find('div.last-name ng-binding').text().trim() ,
-                        highSchool: html.find('span.break-text ng-binding ng-scope').text().trim(),
-                        position: html.find('span.pos ng-binding ng-scope').text().trim(),
-                        height: html.find('span.height ng-binding ng-scope').text(),
-                        weight: html.find('span.pos ng-binding ng-scope'),
-                        stars: html.find('.rv-stars i.star-on').length,
-                        rating: html.find('.score').text().trim().trim(),
-                        college: html.find('div.school-name ng-scope').text()
-                    }; 
-
-                    players.push(player);
-                });
-            }
-
+    
+        } else if (rankingsType === 'Rivals') {
+            $('table.rankings > tbody > tr.prospect-table-row').each(function (index) {
+                let html = $(this);
+                console.log(html);
+    
+                let player = {
+                    ranking: html.find('span.ordinality').text().trim(),
+                    name: html.find('div.first-name').text().trim() + ' ' + html.find('div.last-name ng-binding').text().trim() ,
+                    highSchool: html.find('span.break-text').text().trim(),
+                    position: html.find('span.pos').text().trim(),
+                    height: html.find('span.height').text(),
+                    weight: html.find('span.pos'),
+                    stars: html.find('.rv-stars i.star-on').length,
+                    rating: html.find('.score').text().trim().trim(),
+                    college: html.find('div.school-name').text()
+                }; 
+                console.log('rivals player -> ', player);
+                players.push(player);
+            });
+    
+        } else if ( rankingsType === 'On3' || rankingsType === 'On3Composite') {
+            $('section.PlayerRankings_playerRankings__7DK27 > div.PlayerRankingItem_playerRankingItem__P26jQ').each(function (index) {
+                let html = $(this);
+                //console.log(html);
+                
+                let college;
+    
+                // Check if the element with the committed logo class exists
+                if (html.find('img.PlayerRankingItem_committedLogo__w1QtO').length > 0) {
+                    // Set title from the committed logo's title attribute
+                    college = html.find('img.PlayerRankingItem_committedLogo__w1QtO').attr('title');
+                } else if (html.find('div.PlayerRankingItem_prediction__LXknz').length > 0) {
+                    // Set title as 'uncommitted' if the prediction class exists
+                    college = 'uncommitted';
+                } else {
+                    // Default value if neither element is found
+                    college = 'unknown';
+                }
+    
+                let highSchool = html.find('a.PlayerRankingItem_highSchool__yTm5m').text().trim();
+                let homeTown = html.find('span.PlayerRankingItem_homeTownName__C2R9c').text().trim();
+    
+                let player = {
+                    ranking: html.find('p.PlayerRankingItem_overallRank__ttJJC').text().trim(),
+                    name: html.find('div.PlayerRankingItem_name__Xrs6_').text().trim(),
+                    highSchool: highSchool + ' ' + homeTown,
+                    position: html.find('span.PlayerRankingItem_position__xH0rl').text().trim(),
+                    height: html.find('span.PlayerRankingItem_height__zEWyC').text(),
+                    weight: 0,
+                    stars: html.find('span.StarRating_star__GR_Ff').find('span.MuiRating-iconFilled').length,
+                    college: college,
+                    rating: html.find('span.StarRating_overallRating__wz9dE').text().trim(),
+                    nilValue: html.find('p.PlayerRankingItem_nilValuation__hzo42').text().trim()
+                }; 
+    
+                players.push(player);
+    
+            });
+            
+        } else if (rankingsType === 'ESPN') {
+    
+            $('table tr:not(.colhead)').each(function (index) {
+                let rank, playerName, position, homeTown, height, weight, starRating = 'no-stars', grade, school;
+    
+                $(this).find('td').each(function (tdIndex) {
+                    let html = $(this);
+    
+                    //console.log(html.html());
+                    switch (tdIndex) {
+                        case 0:
+                            rank = html.text().trim();
+                            break;
+                        case 1:
+                            playerName = html.text().trim().replace('IVVideo | Scouts Report', '').trim();
+                            break;
+                        case 2:
+                            position = html.text().trim();
+                            break;
+                        case 3:
+                            homeTown = html.html().replace(/<br\s*\/?>/g, ' ').trim();
+                            break;
+                        case 4:
+                            height = html.text().trim();
+                            break;    
+                        case 5:
+                            weight = html.text().trim();
+                            break;    
+                        case 6:
+                            let liElement = html.find('li');
+                            if (liElement.length > 0) {
+                                let starRatingHTML = liElement.attr('class'); 
+                                if (starRatingHTML) {
+                                    starRating = starRatingHTML.split(' ').pop();
+                                } 
+                            }
+                            break;
+                        
+                        case 7:
+                            grade = html.text().trim();
+                            break;
+                        
+                        case 8:
+                            let schoolDiv = $(this).find('div.school-logo');
+                            
+                            if (schoolDiv.text().trim() === 'list') {
+                                school = 'uncommitted';
+                            } else {
+                                // Find the <span> with class "school-name" and get its text content
+                                school = $(this).find('span.school-name').text().trim();
+                            }
+                            break;
+                        }     
+                    });
+    
+                let player = {
+                    ranking: rank,
+                    name: playerName,
+                    highSchool: homeTown,
+                    position: position,
+                    height: height,
+                    weight: weight,
+                    stars: starRating,
+                    college: school,
+                    rating: grade
+                }; 
+    
+                players.push(player);
+                
+            });        
+        }
+    
         return players;
     },
     /**
