@@ -246,7 +246,6 @@ export default {
             service: service
         });
     
-        console.log(htmlResponse);
         let $ = cheerio.load(htmlResponse);
         let players = [];
     
@@ -295,7 +294,7 @@ export default {
                     rating: html.find('.score').text().trim().trim(),
                     college: html.find('div.school-name').text().trim().split('\n')[0]
                 }; 
-                console.log('rivals player -> ', player);
+                
                 players.push(player);
             });
     

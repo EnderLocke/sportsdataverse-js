@@ -1,6 +1,6 @@
 {
   "name": "sportsdataverse",
-  "version": "2.0.6",
+  "version": "2.0.8",
   "type": "module",
   "description": "Node.js client which retrieves sports data from the ESPN API as well as from the NCAA website, with support for NBA, NFL, NHL, MLB, WNBA, men's and women's college basketball, and college football.",
   "main": "server.js",
@@ -11,6 +11,7 @@
     "axios": "^1.6.7",
     "chai": "^5.0.3",
     "cheerio": "^1.0.0-rc.12",
+    "puppeteer": "^23.7.1",
     "decode-html": "^2.0.0",
     "tabletojson": "^4.1.1"
   },
