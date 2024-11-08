@@ -248,8 +248,6 @@ export default {
     
         console.log(htmlResponse);
         let $ = cheerio.load(htmlResponse);
-        //console.log('this is cheer ', $);
-        console.log('this is cheer.html ', $.html());
         let players = [];
     
         if (service.toLowerCase() === '247' || service.toLowerCase() === '247composite') {
@@ -282,7 +280,6 @@ export default {
             console.log(thisHtml.html());
             $('div.scrollable-table-container table > tbody > tr').each(function (index) {
                 let html = $(this);
-                console.log(html);
                 const parts =  html.find('span.pos').text().trim().split('\n\n');
                 const position = parts[0];
                 const weight = parts[parts.length - 1];
@@ -305,8 +302,6 @@ export default {
         } else if ( service.toLowerCase() === 'on3' || service.toLowerCase() === 'on3composite') {
             $('section.PlayerRankings_playerRankings__7DK27 > div.PlayerRankingItem_playerRankingItem__P26jQ').each(function (index) {
                 let html = $(this);
-                //console.log(html);
-                
                 let college;
     
                 // Check if the element with the committed logo class exists
@@ -349,7 +344,6 @@ export default {
                 $(this).find('td').each(function (tdIndex) {
                     let html = $(this);
     
-                    //console.log(html.html());
                     switch (tdIndex) {
                         case 0:
                             rank = html.text().trim();
