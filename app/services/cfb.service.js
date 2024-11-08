@@ -8,6 +8,32 @@ import puppeteer from 'puppeteer';
  * @namespace cfb
  */
 
+async function autoScroll(page, targetRowCount = 250) {
+    await page.evaluate(async (targetRowCount) => {
+        await new Promise((resolve) => {
+            let totalHeight = 0;
+            const distance = 100;
+            let attempts = 0;
+            const maxAttempts = 20;
+
+            const timer = setInterval(() => {
+                window.scrollBy(0, distance);
+                totalHeight += distance;
+
+                // Use the specific selector for rows in the table
+                const rows = document.querySelectorAll('div.scrollable-table-container table > tbody > tr');
+                
+                if (rows.length >= targetRowCount || attempts >= maxAttempts) {
+                    clearInterval(timer);
+                    resolve();
+                } else if (totalHeight >= document.body.scrollHeight) {
+                    // Increment attempts if we hit the current bottom without loading new content
+                    attempts += 1;
+                }
+            }, 500); // Adjust this delay as needed
+        });
+    }, targetRowCount);
+}
 
 async function fetchRankingsData({
     baseUrl, 
@@ -16,16 +42,17 @@ async function fetchRankingsData({
 }) {
     let content;
 
-    if (service === 'Rivals') {
-        // Use Puppeteer for 'Rivals'
+    if (service.toLowerCase() === 'rivals') {
         const browser = await puppeteer.launch();
         const page = await browser.newPage();
         await page.goto(baseUrl, { waitUntil: 'networkidle2' });
 
-        content = await page.content(); // Extract the fully rendered page content
+        // Scroll until all rows are loaded based on the selector
+        await autoScroll(page);
+
+        content = await page.content(); // Get the fully rendered page content
         await browser.close();
     } else {
-        // Use axios for other rankings types
         const res = await axios.get(baseUrl, axiosConfig);
         content = res.data;
     }
@@ -225,7 +252,7 @@ export default {
                 State: state
             };
         }  else if (service === 'Rivals') {
-            baseUrl = `https://n.rivals.com/prospect_rankings/rivals250/${year}?position=ALL%20POSITIONS`;
+            baseUrl = `https://n.rivals.com/prospect_rankings/rivals250/${year}`;
         } else if (service === 'On3') {
             baseUrl = `https://www.on3.com/db/rankings/player/football/${year}/`;
         } else if ( service == 'On3Composite') {
