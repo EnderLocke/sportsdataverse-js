@@ -1,10 +1,38 @@
 import axios from 'axios';
 import cheerio from 'cheerio';
+import puppeteer from 'puppeteer';
+
 /**
  * Operations for College Football.
  *
  * @namespace cfb
  */
+
+
+async function fetchRankingsData({
+    baseUrl, 
+    axiosConfig, 
+    rankingsType
+}) {
+    let content;
+
+    if (rankingsType === 'Rivals') {
+        // Use Puppeteer for 'Rivals'
+        const browser = await puppeteer.launch();
+        const page = await browser.newPage();
+        await page.goto(baseUrl, { waitUntil: 'networkidle2' });
+
+        content = await page.content(); // Extract the fully rendered page content
+        await browser.close();
+    } else {
+        // Use axios for other rankings types
+        const res = await axios.get(baseUrl, axiosConfig);
+        content = res.data;
+    }
+
+    return content;
+}
+
 export default {
     /**
      * Gets the College Football game play-by-play data for a specified game.
@@ -143,7 +171,7 @@ export default {
             standings: res.data.standings
         };
     },
-
+    
     /**
      * Gets the College Football Player recruiting data for a specified year, page, position, state and institution type if available.
      * @memberOf cfb
@@ -166,11 +194,12 @@ export default {
         state = null,
         rankingsType = "247Composite"
     }) {
+    
         let params;
         let baseUrl;
         const axiosConfig = {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
             }
         };
         
@@ -211,9 +240,16 @@ export default {
             axiosConfig.params = params;
         }
     
-        const res = await axios.get(baseUrl, axiosConfig);
+        const htmlResponse = await fetchRankingsData({
+            baseUrl: baseUrl,
+            axiosConfig: axiosConfig,
+            rankingsType: rankingsType
+        });
     
-        let $ = cheerio.load(res.data);
+        console.log(htmlResponse);
+        let $ = cheerio.load(htmlResponse);
+        //console.log('this is cheer ', $);
+        console.log('this is cheer.html ', $.html());
         let players = [];
     
         if (rankingsType === '247' || rankingsType === '247Composite') {
@@ -241,20 +277,26 @@ export default {
             });
     
         } else if (rankingsType === 'Rivals') {
-            $('table.rankings > tbody > tr.prospect-table-row').each(function (index) {
+            console.log($.html());
+            let thisHtml = $('table');
+            console.log(thisHtml.html());
+            $('div.scrollable-table-container table > tbody > tr').each(function (index) {
                 let html = $(this);
                 console.log(html);
+                const parts =  html.find('span.pos').text().trim().split('\n\n');
+                const position = parts[0];
+                const weight = parts[parts.length - 1];
     
                 let player = {
                     ranking: html.find('span.ordinality').text().trim(),
-                    name: html.find('div.first-name').text().trim() + ' ' + html.find('div.last-name ng-binding').text().trim() ,
-                    highSchool: html.find('span.break-text').text().trim(),
-                    position: html.find('span.pos').text().trim(),
-                    height: html.find('span.height').text(),
-                    weight: html.find('span.pos'),
-                    stars: html.find('.rv-stars i.star-on').length,
+                    name: html.find('div.first-name').text().trim() + ' ' + html.find('div.last-name').text().trim() ,
+                    highSchool: html.find('div.break-text').text().trim().replace('\n\n', ' '),
+                    position: position,
+                    height: html.find('span.height').text().trim(),
+                    weight: weight,
+                    stars: html.find('rv-stars i.star-on').length,
                     rating: html.find('.score').text().trim().trim(),
-                    college: html.find('div.school-name').text()
+                    college: html.find('div.school-name').text().trim().split('\n')[0]
                 }; 
                 console.log('rivals player -> ', player);
                 players.push(player);
@@ -298,7 +340,7 @@ export default {
                 players.push(player);
     
             });
-            
+    
         } else if (rankingsType === 'ESPN') {
     
             $('table tr:not(.colhead)').each(function (index) {
@@ -307,6 +349,7 @@ export default {
                 $(this).find('td').each(function (tdIndex) {
                     let html = $(this);
     
+                    //console.log(html.html());
                     switch (tdIndex) {
                         case 0:
                             rank = html.text().trim();
