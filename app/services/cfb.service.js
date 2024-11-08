@@ -199,7 +199,7 @@ export default {
         let baseUrl;
         const axiosConfig = {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
             }
         };
         
@@ -252,7 +252,7 @@ export default {
         console.log('this is cheer.html ', $.html());
         let players = [];
     
-        if (rankingsType === '247' || rankingsType === '247Composite') {
+        if (rankingsType.toLowerCase() === '247' || rankingsType.toLowerCase() === '247composite') {
             // Couldn't grab the rank correctly with JQuery so it's manually calculated
             let rank = 1 + 50 * (page - 1);
     
@@ -276,7 +276,7 @@ export default {
                 rank++;
             });
     
-        } else if (rankingsType === 'Rivals') {
+        } else if (rankingsType.toLowerCase() === 'rivals') {
             console.log($.html());
             let thisHtml = $('table');
             console.log(thisHtml.html());
@@ -302,7 +302,7 @@ export default {
                 players.push(player);
             });
     
-        } else if ( rankingsType === 'On3' || rankingsType === 'On3Composite') {
+        } else if ( rankingsType.toLowerCase() === 'on3' || rankingsType.toLowerCase() === 'on3composite') {
             $('section.PlayerRankings_playerRankings__7DK27 > div.PlayerRankingItem_playerRankingItem__P26jQ').each(function (index) {
                 let html = $(this);
                 //console.log(html);
@@ -341,7 +341,7 @@ export default {
     
             });
     
-        } else if (rankingsType === 'ESPN') {
+        } else if (rankingsType.toLowerCase() === 'espn') {
     
             $('table tr:not(.colhead)').each(function (index) {
                 let rank, playerName, position, homeTown, height, weight, starRating = 'no-stars', grade, school;
