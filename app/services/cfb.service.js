@@ -173,7 +173,7 @@ export default {
     },
     
     /**
-     * Gets the College Football Player recruiting data for a specified year, page, position, state and institution type if available.
+     * Gets the College Football Player recruiting data for a specified year, page, position, state, recruiting service and institution type if available.
      * @memberOf cfb
      * @async
      * @function
@@ -184,7 +184,7 @@ export default {
      * @param {string} state - State of recruit only used with 247
      * @returns json
      * @example
-     * const result = await sdv.cfb.getPlayerRankings({year: 2016});
+     * const result = await sdv.cfb.getPlayerRankings({year: 2016, service: "247"});
      */
     getPlayerRankings: async function ({
         year,
