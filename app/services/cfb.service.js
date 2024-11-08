@@ -274,9 +274,6 @@ export default {
             });
     
         } else if (service.toLowerCase() === 'rivals') {
-            console.log($.html());
-            let thisHtml = $('table');
-            console.log(thisHtml.html());
             $('div.scrollable-table-container table > tbody > tr').each(function (index) {
                 let html = $(this);
                 const parts =  html.find('span.pos').text().trim().split('\n\n');
