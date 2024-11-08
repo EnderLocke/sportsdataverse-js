@@ -190,7 +190,7 @@ Gets the College Football Player recruiting data for a specified year, page, pos
 | page | <code>number</code> | Page (50 per page) |
 | group | <code>&quot;HighSchool&quot;</code> \| <code>&quot;JuniorCollege&quot;</code> \| <code>&quot;PrepSchool&quot;</code> | Institution Type |
 | state | <code>string</code> | State of recruit |
-| playerRankings | <code>&quot;247&quot;</code> \| <code>&quot;247Composite&quot;</code> \| <code>&quot;Rivals&quot;</code> \| <code>&quot;ESPN&quot;</code> \| <code>&quot;On3&quot;</code> \| <code>&quot;On3Composite&quot;</code> | Ranking Service to Use |
+| rankingsType | <code>&quot;247&quot;</code> \| <code>&quot;247Composite&quot;</code> \| <code>&quot;Rivals&quot;</code> \| <code>&quot;ESPN&quot;</code> \| <code>&quot;On3&quot;</code> \| <code>&quot;On3Composite&quot;</code> | Ranking Service to Use |
 
 **Example**  
 ```js
