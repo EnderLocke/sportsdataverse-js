@@ -178,7 +178,7 @@ const result = await sdv.cfb.getPicks(401256194);
 ```
 <a name="cfb.getPlayerRankings"></a>
 
-### cfb.getPlayerRankings(year, page, group, state, rankingsType) ⇒
+### cfb.getPlayerRankings(year, page, group, state, service) ⇒
 Gets the College Football Player recruiting data for a specified year, page, position, state and institution type if available.
 
 **Kind**: static method of [<code>cfb</code>](#cfb)  
@@ -190,11 +190,11 @@ Gets the College Football Player recruiting data for a specified year, page, pos
 | page | <code>number</code> | Page (50 per page) |
 | group | <code>&quot;HighSchool&quot;</code> \| <code>&quot;JuniorCollege&quot;</code> \| <code>&quot;PrepSchool&quot;</code> | Institution Type |
 | state | <code>string</code> | State of recruit |
-| rankingsType | <code>&quot;247&quot;</code> \| <code>&quot;247Composite&quot;</code> \| <code>&quot;Rivals&quot;</code> \| <code>&quot;ESPN&quot;</code> \| <code>&quot;On3&quot;</code> \| <code>&quot;On3Composite&quot;</code> | Ranking Service to pull |
+| service | <code>&quot;247&quot;</code> \| <code>&quot;247Composite&quot;</code> \| <code>&quot;Rivals&quot;</code> \| <code>&quot;ESPN&quot;</code> \| <code>&quot;On3&quot;</code> \| <code>&quot;On3Composite&quot;</code> | Ranking Service to pull |
 
 **Example**  
 ```js
-const result = await sdv.cfb.getPlayerRankings({year: 2016, rankingType: "247"});
+const result = await sdv.cfb.getPlayerRankings({year: 2016, service: "247"});
 ```
 <a name="cfb.getSchoolRankings"></a>
 

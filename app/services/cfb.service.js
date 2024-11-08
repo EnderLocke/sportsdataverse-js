@@ -12,11 +12,11 @@ import puppeteer from 'puppeteer';
 async function fetchRankingsData({
     baseUrl, 
     axiosConfig, 
-    rankingsType
+    service
 }) {
     let content;
 
-    if (rankingsType === 'Rivals') {
+    if (service === 'Rivals') {
         // Use Puppeteer for 'Rivals'
         const browser = await puppeteer.launch();
         const page = await browser.newPage();
@@ -180,7 +180,7 @@ export default {
      * @param {*} year - Year (YYYY)
      * @param {number} page - Page (50 per page) used with 247 only
      * @param {"HighSchool"|"JuniorCollege"|"PrepSchool"} group - Institution Type, 247 only
-     * @param {"247Composite"|"247"|"Rivals"|"ESPN"|"On3"|"On3Composite"} rankingsType - Ranking Service Type
+     * @param {"247Composite"|"247"|"Rivals"|"ESPN"|"On3"|"On3Composite"} service - Ranking Service Type
      * @param {string} state - State of recruit only used with 247
      * @returns json
      * @example
@@ -192,7 +192,7 @@ export default {
         group = "HighSchool",
         position = null,
         state = null,
-        rankingsType = "247Composite"
+        service = "247Composite"
     }) {
     
         let params;
@@ -208,7 +208,7 @@ export default {
             axiosConfig.params = params;
         }
     
-        if (rankingsType === '247Composite') {
+        if (service === '247Composite') {
             baseUrl = `http://247sports.com/Season/${year}-Football/CompositeRecruitRankings`;
             params = {
                 InstitutionGroup: group,
@@ -216,7 +216,7 @@ export default {
                 Position: position,
                 State: state
             };
-        } else if (rankingsType === '247') {
+        } else if (service === '247') {
             baseUrl = `http://247sports.com/Season/${year}-Football/recruitrankings`;
             params = {
                 InstitutionGroup: group,
@@ -224,13 +224,13 @@ export default {
                 Position: position,
                 State: state
             };
-        }  else if (rankingsType === 'Rivals') {
+        }  else if (service === 'Rivals') {
             baseUrl = `https://n.rivals.com/prospect_rankings/rivals250/${year}?position=ALL%20POSITIONS`;
-        } else if (rankingsType === 'On3') {
+        } else if (service === 'On3') {
             baseUrl = `https://www.on3.com/db/rankings/player/football/${year}/`;
-        } else if ( rankingsType == 'On3Composite') {
+        } else if ( service == 'On3Composite') {
             baseUrl = `https://www.on3.com/db/rankings/industry-player/football/${year}/`
-        } else if (rankingsType === 'ESPN') {
+        } else if (service === 'ESPN') {
             baseUrl = `https://www.espn.com/college-sports/football/recruiting/playerrankings/_/class/${year}/order/true`
         } else {
             throw new Error("Invalid rankings type");
@@ -243,7 +243,7 @@ export default {
         const htmlResponse = await fetchRankingsData({
             baseUrl: baseUrl,
             axiosConfig: axiosConfig,
-            rankingsType: rankingsType
+            service: service
         });
     
         console.log(htmlResponse);
@@ -252,7 +252,7 @@ export default {
         console.log('this is cheer.html ', $.html());
         let players = [];
     
-        if (rankingsType.toLowerCase() === '247' || rankingsType.toLowerCase() === '247composite') {
+        if (service.toLowerCase() === '247' || service.toLowerCase() === '247composite') {
             // Couldn't grab the rank correctly with JQuery so it's manually calculated
             let rank = 1 + 50 * (page - 1);
     
@@ -276,7 +276,7 @@ export default {
                 rank++;
             });
     
-        } else if (rankingsType.toLowerCase() === 'rivals') {
+        } else if (service.toLowerCase() === 'rivals') {
             console.log($.html());
             let thisHtml = $('table');
             console.log(thisHtml.html());
@@ -302,7 +302,7 @@ export default {
                 players.push(player);
             });
     
-        } else if ( rankingsType.toLowerCase() === 'on3' || rankingsType.toLowerCase() === 'on3composite') {
+        } else if ( service.toLowerCase() === 'on3' || service.toLowerCase() === 'on3composite') {
             $('section.PlayerRankings_playerRankings__7DK27 > div.PlayerRankingItem_playerRankingItem__P26jQ').each(function (index) {
                 let html = $(this);
                 //console.log(html);
@@ -341,7 +341,7 @@ export default {
     
             });
     
-        } else if (rankingsType.toLowerCase() === 'espn') {
+        } else if (service.toLowerCase() === 'espn') {
     
             $('table tr:not(.colhead)').each(function (index) {
                 let rank, playerName, position, homeTown, height, weight, starRating = 'no-stars', grade, school;
