@@ -289,10 +289,10 @@ export default {
                     name: html.find('.rankings-page__name-link').text().trim(),
                     highSchool: html.find('span.meta').text().trim(),
                     position: html.find('.position').text().trim(),
-                    height: metrics[0],
-                    weight: metrics[1],
+                    height: metrics[0].trim(),
+                    weight: isNaN(parseInt(metrics[1].trim(), 10)) ? 0 : parseInt(metrics[1].trim(), 10),
                     stars: html.find('.rankings-page__star-and-score > .yellow').length,
-                    rating: html.find('.score').text().trim().trim(),
+                    rating: parseFloat(html.find('.score').text().trim().trim()),
                     college: html.find('.img-link > img').attr('title') || 'uncommitted'
                 };
     
