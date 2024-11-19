@@ -201,6 +201,8 @@ export default {
     
     /**
      * Gets the College Football Player recruiting data for a specified year, page, position, state, recruiting service and institution type if available.
+     * Please note that espn data does not currently have stars data being returned as it is not available wthin
+     * their api
      * @memberOf cfb
      * @async
      * @function
