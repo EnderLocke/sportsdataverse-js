@@ -21,7 +21,7 @@ async function autoScroll(page, targetRowCount = 250) {
                 totalHeight += distance;
 
                 // Use the specific selector for rows in the table
-                const rows = document.querySelectorAll('div.scrollable-table-container table > tbody > tr');
+                const rows = document.querySelectorAll('table tbody tr');
                 
                 if (rows.length >= targetRowCount || attempts >= maxAttempts) {
                     clearInterval(timer);
@@ -205,9 +205,9 @@ export default {
      * @async
      * @function
      * @param {*} year - Year (YYYY)
-     * @param {number} page - Page (50 per page) used with 247 only
+     * @param {number} page - Page (50 per page) does not work with rivals
      * @param {"HighSchool"|"JuniorCollege"|"PrepSchool"} group - Institution Type, 247 only
-     * @param {"247Composite"|"247"|"Rivals"|"ESPN"|"On3"|"On3Composite"} service - Ranking Service Type
+     * @param {"247Composite"|"247"|"Rivals"|"ESPN"|"On3"|"On3Composite"} service - Ranking Service Type (On3Composite may be bugged)
      * @param {string} state - State of recruit only used with 247
      * @returns json
      * @example
@@ -258,7 +258,12 @@ export default {
         } else if ( service == 'On3Composite') {
             baseUrl = `https://www.on3.com/db/rankings/industry-player/football/${year}/`
         } else if (service === 'ESPN') {
-            baseUrl = `https://www.espn.com/college-sports/football/recruiting/playerrankings/_/class/${year}/order/true`
+            baseUrl = `https://sports.core.api.espn.com/v2/sports/football/leagues/college-football/recruiting/${year}/athletes`;
+            params = {
+                Page: page,
+                lang: 'en',
+                region: 'us'
+            };
         } else {
             throw new Error("Invalid rankings type");
         }
@@ -285,12 +290,14 @@ export default {
     
                 let metrics = html.find('.metrics').text().split('/');
                 let player = {
-                    ranking: rank,
+                    ranking: rank, //parseInt(html.find('.rank-column .primary').text().trim().split(' ')[0], 10),
                     name: html.find('.rankings-page__name-link').text().trim(),
                     highSchool: html.find('span.meta').text().trim(),
                     position: html.find('.position').text().trim(),
                     height: metrics[0].trim(),
-                    weight: isNaN(parseInt(metrics[1].trim(), 10)) ? 0 : parseInt(metrics[1].trim(), 10),
+                    weight: metrics[1] && !isNaN(parseInt(metrics[1].trim(), 10)) 
+                    ? parseInt(metrics[1].trim(), 10) 
+                    : 0,
                     stars: html.find('.rankings-page__star-and-score > .yellow').length,
                     rating: parseFloat(html.find('.score').text().trim().trim()),
                     college: html.find('.img-link > img').attr('title') || 'uncommitted'
@@ -361,73 +368,27 @@ export default {
     
         } else if (service.toLowerCase() === 'espn') {
     
-            $('table tr:not(.colhead)').each(function (index) {
-                let rank, playerName, position, homeTown, height, weight, starRating = 'no-stars', grade, school;
-    
-                $(this).find('td').each(function (tdIndex) {
-                    let html = $(this);
-    
-                    switch (tdIndex) {
-                        case 0:
-                            rank = html.text().trim();
-                            break;
-                        case 1:
-                            playerName = html.text().trim().replace('IVVideo | Scouts Report', '').trim();
-                            break;
-                        case 2:
-                            position = html.text().trim();
-                            break;
-                        case 3:
-                            homeTown = html.html().replace(/<br\s*\/?>/g, ' ').trim();
-                            break;
-                        case 4:
-                            height = html.text().trim();
-                            break;    
-                        case 5:
-                            weight = html.text().trim();
-                            break;    
-                        case 6:
-                            let liElement = html.find('li');
-                            if (liElement.length > 0) {
-                                let starRatingHTML = liElement.attr('class'); 
-                                if (starRatingHTML) {
-                                    starRating = starRatingHTML.split(' ').pop();
-                                } 
-                            }
-                            break;
-                        
-                        case 7:
-                            grade = html.text().trim();
-                            break;
-                        
-                        case 8:
-                            let schoolDiv = $(this).find('div.school-logo');
-                            
-                            if (schoolDiv.text().trim() === 'list') {
-                                school = 'uncommitted';
-                            } else {
-                                // Find the <span> with class "school-name" and get its text content
-                                school = $(this).find('span.school-name').text().trim();
-                            }
-                            break;
-                        }     
-                    });
-    
+            let allItems = htmlResponse.items;
+        
+            for (const record of allItems) {
+                const position = record.athlete.position.abbreviation;
+
                 let player = {
-                    ranking: rank,
-                    name: playerName,
-                    highSchool: homeTown,
+                    id: record.athlete.id,
+                    alt_id: record.athlete.alternateId,
+                    ranking: record.attributes[0].value,
+                    name: record.athlete.fullName,
+                    highSchool: record.athlete.hometown.city + ', ' + record.athlete.hometown.stateAbbreviation ,
                     position: position,
-                    height: height,
-                    weight: weight,
-                    stars: starRating,
-                    college: school,
-                    rating: grade
+                    height: record.athlete.height,
+                    weight: record.athlete.weight,
+                    stars: 0,
+                    college: '',
+                    rating: record.grade
                 }; 
-    
+
                 players.push(player);
-                
-            });        
+            }    
         }
     
         return players;
