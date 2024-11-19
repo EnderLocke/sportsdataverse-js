@@ -223,7 +223,6 @@ export default {
         state = null,
         service = "247Composite"
     }) {
-    
         let params;
         let baseUrl;
         const axiosConfig = {
@@ -231,11 +230,6 @@ export default {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36'
             }
         };
-        
-        // Add params if it's not empty
-        if (params && Object.keys(params).length > 0) {
-            axiosConfig.params = params;
-        }
     
         if (service === '247Composite') {
             baseUrl = `http://247sports.com/Season/${year}-Football/CompositeRecruitRankings`;
@@ -279,8 +273,9 @@ export default {
             axiosConfig: axiosConfig,
             service: service
         });
-    
-        let $ = cheerio.load(htmlResponse);
+        if (service.toLowerCase() !== 'espn') {
+            let $ = cheerio.load(htmlResponse);
+        }
         let players = [];
     
         if (service.toLowerCase() === '247' || service.toLowerCase() === '247composite') {
@@ -369,7 +364,6 @@ export default {
             });
     
         } else if (service.toLowerCase() === 'espn') {
-    
             let allItems = htmlResponse.items;
         
             for (const record of allItems) {
