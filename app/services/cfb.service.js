@@ -370,7 +370,7 @@ export default {
         
             for (const record of allItems) {
                 const position = record.athlete.position.abbreviation;
-                const type0Attribute = attributes.find(attr => attr.type === 0);
+                const type0Attribute = record.attributes.find(attr => attr.type === 0);
                 const finalRank = type0Attribute ? type0Attribute.value : rank;
 
                 let player = {
