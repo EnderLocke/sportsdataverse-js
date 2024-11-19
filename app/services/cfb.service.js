@@ -254,9 +254,8 @@ export default {
         } else if ( service == 'On3Composite') {
             baseUrl = `https://www.on3.com/db/rankings/industry-player/football/${year}/`
         } else if (service === 'ESPN') {
-            baseUrl = `https://sports.core.api.espn.com/v2/sports/football/leagues/college-football/recruiting/${year}/athletes`;
+            baseUrl = `https://sports.core.api.espn.com/v2/sports/football/leagues/college-football/recruiting/${year}/athletes?page=${page}`;
             params = {
-                Page: page,
                 lang: 'en',
                 region: 'us'
             };
@@ -365,14 +364,19 @@ export default {
     
         } else if (service.toLowerCase() === 'espn') {
             let allItems = htmlResponse.items;
+            // calculating rank because it is not always available through history, 
+            // will grab it if availbe if not will use calc
+            let rank = 1 + 25 * (page - 1);
         
             for (const record of allItems) {
                 const position = record.athlete.position.abbreviation;
+                const type0Attribute = attributes.find(attr => attr.type === 0);
+                const finalRank = type0Attribute ? type0Attribute.value : rank;
 
                 let player = {
                     id: record.athlete.id,
                     alt_id: record.athlete.alternateId,
-                    ranking: record.attributes[0].value,
+                    ranking: finalRank,
                     name: record.athlete.fullName,
                     highSchool: record.athlete.hometown.city + ', ' + record.athlete.hometown.stateAbbreviation ,
                     position: position,
@@ -382,8 +386,9 @@ export default {
                     college: '',
                     rating: record.grade
                 }; 
-
+                
                 players.push(player);
+                rank++;
             }    
         }
     
