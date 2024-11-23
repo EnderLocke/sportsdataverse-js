@@ -79,7 +79,7 @@ async function fetchRankingsData({
     let content;
 
     if (service.toLowerCase() === 'rivals') {
-        const browser = await puppeteer.launch();
+        const browser = await puppeteer.launch({ headless: true });
         const page = await browser.newPage();
         await page.goto(baseUrl, { waitUntil: 'networkidle2' });
 
