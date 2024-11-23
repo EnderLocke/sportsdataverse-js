@@ -8,6 +8,42 @@ import puppeteer from 'puppeteer';
  * @namespace cfb
  */
 
+async function fetchEspnStars(playerId) {
+    const url = `https://www.espn.com/college-sports/football/recruiting/player/_/id/${playerId}/`;
+    
+    const browser = await puppeteer.launch({ headless: true });
+    const page = await browser.newPage();
+
+    let starRating = null;
+
+    try {
+        // Intercept network requests
+        await page.setRequestInterception(true);
+        page.on('request', (request) => {
+            const requestUrl = request.url();
+
+            // Check if the URL matches the star rating pattern
+            const match = requestUrl.match(/rating-(\d+)_stars\.png/);
+            if (match) {
+                starRating = parseInt(match[1], 10); // Extract and parse the "n" value
+            }
+
+            // Continue the request
+            request.continue();
+        });
+
+        // Navigate to the player's ESPN page
+        await page.goto(url, { waitUntil: 'networkidle2' });
+
+    } catch (error) {
+        console.error(`Error fetching star rating for playerId ${playerId}:`, error);
+    } finally {
+        await browser.close();
+    }
+
+    return starRating;
+}
+
 async function autoScroll(page, targetRowCount = 250) {
     await page.evaluate(async (targetRowCount) => {
         await new Promise((resolve) => {
@@ -373,16 +409,18 @@ export default {
                 const type0Attribute = record.attributes.find(attr => attr.type === 0);
                 const finalRank = type0Attribute ? type0Attribute.value : rank;
 
+                const stars = await fetchEspnStars(record.athlete.id);
+
                 let player = {
                     id: record.athlete.id,
                     alt_id: record.athlete.alternateId,
-                    ranking: finalRank,
+                    ranking: record.attributes[0].value,
                     name: record.athlete.fullName,
                     highSchool: record.athlete.hometown.city + ', ' + record.athlete.hometown.stateAbbreviation ,
                     position: position,
                     height: record.athlete.height,
                     weight: record.athlete.weight,
-                    stars: 0,
+                    stars: stars,
                     college: '',
                     rating: record.grade
                 }; 
