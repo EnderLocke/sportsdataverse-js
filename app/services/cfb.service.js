@@ -14,7 +14,7 @@ async function fetchEspnStars(playerId) {
     const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
 
-    let starRating = null;
+    let starRating = 0;
 
     try {
         // Intercept network requests
@@ -33,7 +33,7 @@ async function fetchEspnStars(playerId) {
         });
 
         // Navigate to the player's ESPN page
-        await page.goto(url, { waitUntil: 'networkidle2' });
+        await page.goto(url, { waitUntil: 'domcontentloaded' });
 
     } catch (error) {
         console.error(`Error fetching star rating for playerId ${playerId}:`, error);
@@ -414,7 +414,7 @@ export default {
                 let player = {
                     id: record.athlete.id,
                     alt_id: record.athlete.alternateId,
-                    ranking: record.attributes[0].value,
+                    ranking: rank,
                     name: record.athlete.fullName,
                     highSchool: record.athlete.hometown.city + ', ' + record.athlete.hometown.stateAbbreviation ,
                     position: position,
